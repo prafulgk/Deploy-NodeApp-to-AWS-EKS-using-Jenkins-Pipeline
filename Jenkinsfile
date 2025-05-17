@@ -31,6 +31,7 @@ pipeline {
                 script {
                     sh "aws eks update-kubeconfig --name FB-Sidecar --region us-east-1"
                     sh "kubectl get ns"
+                    sh "kubectl get deploy -A"
                     sh "kubectl apply -f nodejsapp.yaml"
                 }
             }
