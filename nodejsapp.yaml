@@ -2,7 +2,7 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: nodejs-app
+  name: nodejs-app-1
   namespace: default
   labels:
     app: nodejs-app
