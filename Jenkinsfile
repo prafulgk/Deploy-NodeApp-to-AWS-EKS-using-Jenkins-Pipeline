@@ -1,30 +1,39 @@
 pipeline {
-  agent any
-  
-   tools {nodejs "node"}
+    agent any
+
+    stages {
+        stage('Clone') {
+            steps {
+                git branch: "main", url: "https://github.com/prafulgk/Deploy-NodeApp-to-AWS-EKS-using-Jenkins-Pipeline.git"
+            }
+        }
     
-  stages {
-    stage("Clone code from GitHub") {
+       stage('Docker Build') {
             steps {
                 script {
-                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Github', url: 'https://github.com/prafulgk/Deploy-NodeApp-to-AWS-EKS-using-Jenkins-Pipeline.git']])
+                    app = docker.build("testimage")
                 }
             }
         }
-     
-    stage('Node JS Build') {
-      steps {
-        sh 'npm install'
-      }
-    }
-  
-     stage('Build Node JS Docker Image') {
+        
+        stage('ecr login') {
             steps {
                 script {
-                  sh 'docker build -t devopshint/node-app-1.0 .'
+                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 351182272812.dkr.ecr.us-east-1.amazonaws.com"
+                    sh "docker tag testimage:latest 351182272812.dkr.ecr.us-east-1.amazonaws.com/ubuntu:latest"
+                    sh "docker push 351182272812.dkr.ecr.us-east-1.amazonaws.com/ubuntu:latest"
                 }
             }
-        }     
-
-  }
+        }
+        
+        stage('eks deploy') {
+            steps {
+                script {
+                    sh "aws eks update-kubeconfig --name FB-Sidecar --region us-east-1"
+                    sh "kubectl get ns"
+                    sh "kubectl apply -f nodejsapp.yaml"
+                }
+            }
+        }
+    }
 }
